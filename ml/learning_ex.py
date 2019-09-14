@@ -4,6 +4,9 @@ import mymodule as _
 paths = [
   "./ramen",
   "./rice",
+  "./gyu",
+  "./katu",
+  "./yakisoba"
 ]
 
 # 画像を配列に変換
@@ -20,7 +23,7 @@ x = _.get_resized_many(x, 32, 32)
 x = _.normalize(x)
 
 # One-Hot-Encoding
-y = _.oneHotEncoding(y)
+y = _.oneHotEncoding(y, len(paths))
 
 # データ分割
 x_train, x_test, y_train, y_test = _.split(x, y)

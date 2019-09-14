@@ -36,8 +36,8 @@ def normalize(x):
   x /= 255
   return x
 
-def oneHotEncoding(y):
-  return  np_utils.to_categorical(y, num_classes=2).astype('i')
+def oneHotEncoding(y, num):
+  return  np_utils.to_categorical(y, num_classes=num).astype('i')
 
 def get_augmented(img):
   if np.random.rand() > 0.5: #50％の確率で画像を左右反転させる
@@ -102,7 +102,7 @@ def testLearning(x, y, width, height):
   model.add(Flatten())
   model.add(Dense(512))
   model.add(Activation('relu'))
-  model.add(Dense(2))
+  model.add(Dense(len(y[0])))
   model.add(Activation('softmax'))
 
   # 同様に学習前にコンパイルします。

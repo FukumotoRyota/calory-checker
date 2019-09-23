@@ -13,6 +13,9 @@ from sklearn import metrics
 from keras import regularizers
 from keras.layers.convolutional import ZeroPadding2D, MaxPooling2D
 from keras.layers import BatchNormalization, Dropout, AveragePooling2D, merge
+from keras.callbacks import EarlyStopping
+import matplotlib as plt
+
 
 def load(path):
   return load_model(path, compile=False)
@@ -27,6 +30,7 @@ def img_to_npz(paths):
   labels = []
   for index, path in enumerate(paths):
     images = glob("{}/*".format(path))
+    print(len(images))
     for img in images:
       img_array = img_to_array(img)
       results.append(img_array)
@@ -43,17 +47,17 @@ def normalize(x):
 def oneHotEncoding(y, num):
   return  np_utils.to_categorical(y, num_classes=num).astype('i')
 
-def get_augmented(img):
-  if np.random.rand() > 0.5: #50％の確率で画像を左右反転させる
-    img = cv2.flip(img, 1)
-  if np.random.rand() > 0.5: #50%の確率で画像を左右どちらかに回転させる
-    size = (img.shape[0], img.shape[1])
-    center = (int(size[0]/2), int(size[1]/2))
-    angle = np.random.randint(-30, 31)
-    scale=1.0
-    rotation_matrix = cv2.getRotationMatrix2D(center, angle, scale)
-    img = cv2.warpAffine(img, rotation_matrix, size)
-  return img
+# def get_augmented(img):
+#   if np.random.rand() > 0.5: #50％の確率で画像を左右反転させる
+#     img = cv2.flip(img, 1)
+#   if np.random.rand() > 0.5: #50%の確率で画像を左右どちらかに回転させる
+#     size = (img.shape[0], img.shape[1])
+#     center = (int(size[0]/2), int(size[1]/2))
+#     angle = np.random.randint(-30, 31)
+#     scale=1.0
+#     rotation_matrix = cv2.getRotationMatrix2D(center, angle, scale)
+#     img = cv2.warpAffine(img, rotation_matrix, size)
+#   return img
 
 def get_resized(img, width, height):
   resized = cv2.resize(img, (width, height)) #画像を(width, height)にリサイズする
@@ -131,20 +135,20 @@ def testLearning(x, y, width, height):
   # 返り値
   return model
 
- def CNNmodel(X_train, y_train, X_test, y_test, width, height):
+def CNNmodel(X_train, y_train, X_test, y_test, width, height, kernel, batch, epoch):
     model = Sequential()
 
-    model.add(Conv2D(filters=64, input_shape=(width, height, 3), kernel_size=(4, 4), strides=(1, 1), padding='same'))
+    model.add(Conv2D(filters=64, input_shape=(width, height, 3), kernel_size=(kernel, kernel), strides=(1, 1), padding='same'))
     model.add(BatchNormalization())
     model.add(MaxPool2D(pool_size=(2, 2)))
     model.add(Activation('relu'))
 
-    model.add(Conv2D(filters=128, kernel_size=(4, 4), strides=(1, 1), padding='same'))
+    model.add(Conv2D(filters=128, kernel_size=(kernel, kernel), strides=(1, 1), padding='same'))
     model.add(BatchNormalization())
     model.add(MaxPool2D(pool_size=(2, 2)))
     model.add(Activation('relu'))
 
-    model.add(Conv2D(filters=128, kernel_size=(4, 4), strides=(1, 1), padding='same'))
+    model.add(Conv2D(filters=128, kernel_size=(kernel, kernel), strides=(1, 1), padding='same'))
     model.add(BatchNormalization())
     model.add(MaxPool2D(pool_size=(2, 2)))
     model.add(Activation('relu'))
@@ -153,7 +157,7 @@ def testLearning(x, y, width, height):
     model.add(Dense(512))
     model.add(Activation('relu'))
     model.add(Dropout(rate=0.5))
-    model.add(Dense(2))
+    model.add(Dense(len(y_train[0])))
     model.add(Activation('softmax'))
 
     model.summary()
@@ -164,13 +168,12 @@ def testLearning(x, y, width, height):
                   metrics=['accuracy'])
 
     # ミニバッチに含まれるサンプル数を指定
-    batch_size = 120
+    batch_size = batch
 
     # epoch数を指定
-    n_epoch = 50
+    n_epoch = epoch
 
     # 学習を開始します。
-    from keras.callbacks import EarlyStopping
     es = EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='min')
 
     # 学習の際にEarlyStoppingを適用
@@ -178,11 +181,17 @@ def testLearning(x, y, width, height):
                      validation_data=(X_test, y_test), verbose=1,
                      callbacks=[es]) # EarlyStoppingを適用
 
+    
+
     # 性能指標を確認
-    print('accuracy: %.3f' % metrics.accuracy_score(y_test, model.predict(X_test).argmax(axis=1)))
-    print('recall: %.3f' % metrics.recall_score(y_test, model.predict(X_test).argmax(axis=1), average='macro'))
-    print('precision: %.3f' % metrics.precision_score(y_test, model.predict(X_test).argmax(axis=1), average='macro'))
-    print('f1_score: %.3f' % metrics.f1_score(y_test, model.predict(X_test).argmax(axis=1), average='macro'))
+    # temp_y = []
+    # for y in y_test:
+    #   temp_y.append(np.argmax(y))
+    # temp_y = np.array(temp_y)
+    # print('accuracy: %.3f' % metrics.accuracy_score(temp_y, model.predict(X_test).argmax(axis=1)))
+    # print('recall: %.3f' % metrics.recall_score(temp_y, model.predict(X_test).argmax(axis=1), average='macro'))
+    # print('precision: %.3f' % metrics.precision_score(temp_y, model.predict(X_test).argmax(axis=1), average='macro'))
+    # print('f1_score: %.3f' % metrics.f1_score(temp_y, model.predict(X_test).argmax(axis=1), average='macro'))
 
     # 返り値
     return model
@@ -368,8 +377,8 @@ def plot_history_acc(hist):
 def split(x, y):
   return train_test_split(x, y, train_size=0.75, random_state=10)
 
-def save_npz(x, y):
-  np.savez("results.npz", x=x, y=y)
+def save_npz(x_train, x_test, y_train, y_test):
+  np.savez("results.npz", x_train, x_test, y_train, y_test)
 
 def error_num(model, x_test, y_test, width, height):
   errors = []
@@ -378,3 +387,38 @@ def error_num(model, x_test, y_test, width, height):
     if pred != y_test[i].argmax():
       errors.append(i)
   print(len(y_test), len(errors))
+
+# data augmentationを行う関数
+def get_augmented(img, random_crop=4):
+  # 左右反転のノイズを加える
+  if np.random.rand() > 0.5:
+    img = np.fliplr(img)
+  # 左右どちらかに30度回転させる
+  if np.random.rand() > 0.5:
+    size = (img.shape[0], img.shape[1])
+    # 画像の中心位置(x, y)
+    center = (int(size[0]/2), int(size[1]/2))
+    # 回転させたい角度
+    angle = np.random.randint(-30, 30)
+    # 拡大比率
+    scale = 1.0
+    # 回転変換行列の算出
+    rotation_matrix = cv2.getRotationMatrix2D(center, angle, scale)
+    # 並進移動
+    img = cv2.warpAffine(img, rotation_matrix, size, cv2.INTER_CUBIC)
+  return img
+
+# 画像の前処理を行う関数
+def process_image(image):
+  # image = image.astype('f')
+  # サイズをVGG16指定のものに変換する
+  image = cv2.resize(image, (224, 224))
+  # RGBからそれぞれvgg指定の値を引く(mean-subtractionに相当)
+  # image[:, :, 0] -= 100
+  # image[:, :, 1] -= 116.779
+  # image[:, :, 2] -= 123.68
+  # 0-1正規化
+  # image /= image.max()
+  # augmentation
+  # image = get_augmented(image)
+  return image

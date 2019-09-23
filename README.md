@@ -1,51 +1,25 @@
-# 手順
+# calorie-checker
 
-## 各ファイルの説明
+シューマイ、チャーハン、餃子、ラーメン、エビチリの画像を分類するアプリケーションです。第一回HAITLab東京 Best Product Awardを受賞しています。福本涼太、高木太誠、宮部稜士の3人で作成しました。
 
-### ml/learning_ex.py
+# 発表スライド
 
-学習してモデルを作る例。
+以下のリンクから発表の時に使用したスライドを見ることができます。
 
-### ml/using_ex.py
+https://docs.google.com/presentation/d/1TnxWGAU4Zn144TKg3uSQBhYjy3EnFygM2N0-q6Xrjic/edit?usp=sharing
 
-モデルをロードして使う例。
+# プロダクトの実行
 
-### mymodule.py
-
-ここに色々な関数が入っている。各自色々作る。
-
-## 1. 画像収集
-
-以下のコマンドで画像を集める
+以下のコマンドでwebappディレクトリに移動します。
 
 ```
-googleimagesdownload --keywords "リンゴ"
+cd webapp
 ```
 
-一度にたくさん集める場合の例
+以下のコマンドでapp.pyを実行することでローカルにサーバーが立ち上がります。
 
 ```
-for name in 鉄火丼 ねぎとろ丼 中華丼 鰻重 五目チラシ 刺身 あじの塩焼き ブリの照り焼き サバのみそ煮 生姜焼き ぞうすい 梅茶づけ 天ぷらそば ざるそば かけそば たぬきそば きつねうどん 月見うどん 焼きそば お好み焼き 広島焼き たこやき ヒレかつ 串かつ ロースかつ カキフライ rice おにぎり; do googleimagesdownload --keywords "$name"; done
+python app.py
 ```
 
-[s3](https://s3.console.aws.amazon.com/s3/buckets/foodimages7458/?region=ap-northeast-1&tab=overview)にアップロード
-
-## 2. 画像編集
-
-以下のコマンドでs3から画像を落としてくる。
-
-```
-aws s3 cp s3://foodimages7458 . --recursive
-```
-
-
-
-関係ない画像や適していない画像を除外する。例えば、対象物が端に写っているものは除外すべき。
-
-## 3. 学習
-
-`learning_ex.py`が例。適当にコードを変えて実行する。testデータはこの中で使用する。モデルはmodel.h5というファイルで生成される。
-
-## 4. モデルの使用
-
-`using_ex.py`が例。適当にコードを変えて実行する。
+画像を送信するとそれがシューマイ、チャーハン、餃子、ラーメン、エビチリのうちどれなのかとカロリーを返してくれます。

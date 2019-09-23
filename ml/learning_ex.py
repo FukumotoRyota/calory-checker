@@ -2,11 +2,11 @@ import mymodule as _
 
 # ここに学習させたい画像のpathを追加
 paths = [
-  "./ramen",
-  "./rice",
-  "./gyu",
-  "./katu",
-  "./yakisoba"
+  "./餃子",
+  "./シュウマイ",
+  "./チャーハン",
+  "./肉まん",
+  "./冷やし中華",
 ]
 
 # 画像を配列に変換
@@ -22,15 +22,17 @@ x = _.get_resized_many(x, 32, 32)
 # 正規化
 x = _.normalize(x)
 
-# One-Hot-Encoding
-y = _.oneHotEncoding(y, len(paths))
-
 # データ分割
 x_train, x_test, y_train, y_test = _.split(x, y)
 
+# One-Hot-Encoding
+yy = y_test
+y_train = _.oneHotEncoding(y_train, len(paths))
+y_test = _.oneHotEncoding(y_test, len(paths))
+
 # 学習
 # 32のところは上のget_resizedと同じにする
-model = _.testLearning(x_train, y_train, 32, 32)
+model = _.CNNmodel(x_train, y_train, x_test, y_test, 32, 32, yy)
 
 # ファイルに出力
 model.save('model.h5', include_optimizer=False)

@@ -1,22 +1,25 @@
 <html>
     <head>
         <title>カロリーチェッカー</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     </head>
     <body>
-        <h1>カロリーチェッカー</h1>
-        <form method="POST" enctype="multipart/form-data">
-            画像を選択
-            <input type="file" name="picture" accept="image/*">
-            <br>
-            <input type="submit" value="send">
-        </form>
-        {% if img %}
-            <img src="data:image/png;base64,{{ img }}">
-        {% endif %}
-        {% if message %}
-            <p>{{ message }}</p>
-        {% else %}
-            <p>no message</p>
-        {% endif %}
+        <div class="container text-center">
+            <h1 class="my-4">カロリーチェッカー</h1>
+            <h3 class="my-4">画像を選択して送信</h2>
+            {% if message %}
+                <h1>{{ message }}</h1>
+            {% else %}
+
+            {% endif %}
+            {% if img %}
+                <img class="img-responsive" src="data:image/png;base64,{{ img }}" style="width: 100%;">
+            {% endif %}
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="picture" accept="image/*" class="my-4">
+                <br>
+                <input type="submit" value="送信" class="my-3">
+            </form>
+        </div>
     </body>
 </html>
